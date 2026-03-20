@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AhmedOS 1.0.0</title>
+<meta property="og:title" content="AhmedOS — Ahmed Essam"/>
+<meta property="og:description" content="A simulated Unix-like OS · NLP · Intelligent Systems · Spatial Computing"/>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#000000;
+  --surface:rgba(28,28,30,0.98);
+  --surface2:rgba(44,44,46,0.95);
+  --surface3:rgba(58,58,60,0.9);
+  --border:rgba(255,255,255,0.12);
+  --border2:rgba(255,255,255,0.07);
+  --text:#FFFFFF;
+  --text-dim:rgba(255,255,255,0.7);
+  --text-muted:rgba(255,255,255,0.45);
+  --text-faint:rgba(255,255,255,0.2);
+  --accent:#0A84FF;
+  --accent2:#0055BB;
+  --green:#30D158;
+  --orange:#FF9F0A;
+  --red:#FF453A;
+  --purple:#BF5AF2;
+  --cyan:#64D2FF;
+  --yellow:#FFD60A;
+  --font:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --win-bg:rgba(30,30,35,0.96);
+  --win-chrome:rgba(40,40,46,0.98);
+  --dock-bg:rgba(255,255,255,0.08);
+  --dock-border:rgba(255,255,255,0.14);
+  --mb-bg:rgba(12,12,18,0.88);
+  --radius:14px;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:var(--font);color:var(--text);user-select:none}
+
+/* ── BIOS ──────────────────────────────────────────────────── */
+#bios{position:fixed;inset:0;background:#000;z-index:9000;font-family:var(--mono);font-size:13px;padding:32px 40px;display:flex;flex-direction:column;overflow:hidden}
+#bios.out{animation:fadeout .6s forwards}
+@keyframes fadeout{to{opacity:0;pointer-events:none}}
+.bios-header{color:#AAA;margin-bottom:24px;border-bottom:1px solid #333;padding-bottom:12px}
+.bios-brand{font-size:16px;font-weight:700;color:#CCC;letter-spacing:.5px}
+.bios-sub{font-size:11px;color:#666;margin-top:2px}
+#bios-lines{flex:1;overflow:hidden}
+.bios-line{line-height:1.7;opacity:0;animation:bios-in .1s forwards}
+@keyframes bios-in{to{opacity:1}}
+.bl-ok{color:#30D158}.bl-warn{color:#FF9F0A}.bl-info{color:#8A8A8E}.bl-dim{color:#444}.bl-white{color:#EEE}
+.bios-bar-wrap{margin-top:20px}
+.bios-bar-track{width:100%;height:3px;background:#1C1C1E;border-radius:2px;overflow:hidden}
+.bios-bar-fill{height:100%;background:#0A84FF;width:0%;transition:width .04s linear;border-radius:2px}
+.bios-bar-lbl{font-size:11px;color:#444;margin-top:6px}
+
+/* ── LOGIN ─────────────────────────────────────────────────── */
+#login{position:fixed;inset:0;z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000}
+#login.active{display:flex}
+#login.out{animation:fadeout .8s forwards}
+.login-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(10,84,255,0.08),transparent 60%),radial-gradient(ellipse at 70% 60%,rgba(191,90,242,0.06),transparent 50%)}
+.login-card{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0}
+.login-avatar{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#0A84FF,#BF5AF2);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:300;color:#fff;margin-bottom:16px;box-shadow:0 0 0 2px rgba(255,255,255,0.12),0 8px 32px rgba(10,84,255,0.3)}
+.login-name{font-size:22px;font-weight:500;color:#fff;margin-bottom:4px;letter-spacing:-.3px}
+.login-role{font-size:13px;color:var(--text-muted);margin-bottom:28px}
+.login-input-wrap{position:relative;width:220px}
+.login-input{width:100%;padding:10px 40px 10px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;font-family:var(--font);font-size:14px;color:#fff;outline:none;letter-spacing:2px;backdrop-filter:blur(8px);transition:border-color .2s}
+.login-input::placeholder{letter-spacing:0;color:var(--text-muted)}
+.login-input:focus{border-color:rgba(10,84,255,0.7)}
+.login-go{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--accent);font-size:18px;cursor:pointer;opacity:.8}
+.login-hint{font-size:11px;color:var(--text-faint);margin-top:10px}
+
+/* ── DESKTOP ───────────────────────────────────────────────── */
+#desk{position:fixed;inset:0;z-index:100;display:none;flex-direction:column}
+#desk.active{display:flex}
+#desk-bg{position:absolute;inset:0;z-index:0}
+
+/* ── MENUBAR ───────────────────────────────────────────────── */
+#mb{height:30px;background:var(--mb-bg);backdrop-filter:blur(28px) saturate(200%);-webkit-backdrop-filter:blur(28px) saturate(200%);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;padding:0 16px;flex-shrink:0;position:relative;z-index:500;letter-spacing:0}
+.mb-apple{font-size:16px;margin-right:16px;opacity:.9;cursor:default}
+.mb-app-name{font-size:13px;font-weight:600;color:var(--text);margin-right:4px}
+.mb-sep{width:1px;height:13px;background:rgba(255,255,255,0.15);margin:0 6px}
+.mb-item{font-size:13px;color:var(--text-dim);padding:0 8px;height:28px;display:flex;align-items:center;border-radius:4px;transition:background .12s;cursor:default}
+.mb-item:hover{background:rgba(255,255,255,0.1)}
+.mb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.mb-right-item{font-size:12px;color:var(--text-dim);padding:0 6px;display:flex;align-items:center;gap:4px;height:28px;border-radius:4px;transition:background .12s;cursor:default}
+.mb-right-item:hover{background:rgba(255,255,255,0.1)}
+.mb-clock{font-size:12px;color:var(--text-dim);letter-spacing:.2px}
+
+/* ── WORKSPACE ─────────────────────────────────────────────── */
+#ws{flex:1;position:relative;overflow:hidden;z-index:1}
+
+/* ── DOCK ──────────────────────────────────────────────────── */
+#dock{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:400;padding:8px 12px;display:flex;align-items:flex-end;gap:5px;background:var(--dock-bg);backdrop-filter:blur(28px) saturate(200%);-webkit-backdrop-filter:blur(28px) saturate(200%);border:1px solid var(--dock-border);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.08)}
+.dock-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 3px;position:relative;transition:transform .18s cubic-bezier(.34,1.56,.64,1)}
+.dock-btn:hover{transform:translateY(-8px) scale(1.15)}
+.dock-btn:hover .dock-tooltip{opacity:1;transform:translateX(-50%) translateY(-4px)}
+.dock-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .18s cubic-bezier(.34,1.2,.64,1);position:relative;cursor:default;box-shadow:0 2px 8px rgba(0,0,0,0.4)}
+.dock-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.5);margin-top:1px;opacity:0;transition:opacity .2s}
+.dock-btn.running .dock-dot{opacity:1}
+.dock-tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(0);background:rgba(28,28,30,0.95);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text);white-space:nowrap;pointer-events:none;opacity:0;transition:all .15s;z-index:10}
+.dock-sep-v{width:1px;height:38px;background:rgba(255,255,255,0.15);margin:0 3px;align-self:center}
+
+/* ── WINDOWS ───────────────────────────────────────────────── */
+.win{position:absolute;display:none;flex-direction:column;min-width:280px;min-height:120px;border-radius:var(--radius);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,0.1);transition:box-shadow .25s,opacity .2s;transform-origin:center top}
+.win.open{display:flex}
+.win.focused{box-shadow:0 32px 90px rgba(0,0,0,.88),0 0 0 1px rgba(255,255,255,0.16),inset 0 1px 0 rgba(255,255,255,0.05)}
+.win-chrome{height:40px;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;background:var(--win-chrome);backdrop-filter:blur(24px) saturate(180%);cursor:grab;position:relative;border-bottom:1px solid rgba(255,255,255,0.06)}
+.win-chrome:active{cursor:grabbing}
+.win-chrome-btns{display:flex;gap:7px;align-items:center}
+.win-btn{width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:filter .15s;cursor:default}
+.win-btn:hover{filter:brightness(1.3)}
+.win-close{background:#FF5F57}
+.win-min{background:#FFBD2E}
+.win-max{background:#28C840}
+.win-chrome-title{position:absolute;left:50%;transform:translateX(-50%);font-size:12px;font-weight:500;color:rgba(255,255,255,0.55);letter-spacing:.3px;pointer-events:none;white-space:nowrap}
+.win-body{flex:1;overflow:hidden;background:var(--win-bg);display:flex;flex-direction:column}
+.win-body::-webkit-scrollbar{width:4px}
+.win-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+.win-resize{position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:se-resize;opacity:.2}
+.win-resize::after{content:'';position:absolute;bottom:3px;right:3px;width:7px;height:7px;border-right:1.5px solid var(--text-dim);border-bottom:1.5px solid var(--text-dim)}
+
+/* Terminal specific */
+.sh-user{color:#30D158}
+.sh-sep{color:var(--text-muted)}
+.sh-path{color:#64D2FF}
+.sh-dollar{color:var(--text-dim);margin:0 6px}
+.sh-out{color:var(--text-dim)}
+.sh-err{color:#FF453A}
+.sh-dim{color:var(--text-muted)}
+.sh-head{color:var(--text-muted);font-weight:500}
+.sh-cmd{color:#0A84FF}
+.sh-dir{color:#64D2FF}
+.sh-exec{color:#30D158}
+.sh-green{color:#30D158}
+
+/* ── SPOTLIGHT ─────────────────────────────────────────────── */
+#spotlight{position:fixed;inset:0;z-index:600;display:none;align-items:flex-start;justify-content:center;padding-top:15vh;background:rgba(0,0,0,0.4);backdrop-filter:blur(2px)}
+#spotlight.active{display:flex}
+.spotlight-box{width:580px;background:rgba(28,28,32,0.97);backdrop-filter:blur(48px) saturate(220%);border:1px solid rgba(255,255,255,0.14);border-radius:16px;overflow:hidden;box-shadow:0 28px 90px rgba(0,0,0,.88),inset 0 1px 0 rgba(255,255,255,0.06)}
+.spotlight-input-row{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.spotlight-icon{font-size:18px;opacity:.6}
+.spotlight-input{flex:1;background:transparent;border:none;outline:none;font-size:16px;color:var(--text);font-family:var(--font)}
+.spotlight-input::placeholder{color:var(--text-muted)}
+.spotlight-results{max-height:320px;overflow-y:auto}
+.spotlight-item{display:flex;align-items:center;gap:12px;padding:10px 18px;transition:background .12s;cursor:default}
+.spotlight-item:hover,.spotlight-item.selected{background:rgba(10,84,255,0.3)}
+.spotlight-item-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.spotlight-item-name{font-size:14px;color:var(--text);font-weight:500}
+.spotlight-item-desc{font-size:12px;color:var(--text-muted)}
+
+/* ── MOBILE ─────────────────────────────────────────────────── */
+@media(max-width:768px){
+  #bios{font-size:11px;padding:20px}
+  #desk{display:none!important}
+  #mob{display:flex!important}
+}
+#mob{display:none;flex-direction:column;background:#000;min-height:100vh;overflow-y:auto;font-family:var(--font);padding-bottom:40px}
+.mob-hero{padding:48px 22px 28px;background:linear-gradient(180deg,rgba(10,84,255,0.08),transparent)}
+.mob-name{font-size:28px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:4px}
+.mob-role{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+.mob-badges{display:flex;flex-wrap:wrap;gap:6px}
+.mob-badge{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);color:var(--text-dim)}
+.mob-sec{padding:20px 22px 0}
+.mob-sec-lbl{font-size:11px;letter-spacing:2px;color:var(--text-muted);margin-bottom:12px}
+.mob-card{background:rgba(28,28,30,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;margin-bottom:10px}
+.mob-card-name{font-size:14px;color:#fff;font-weight:500;margin-bottom:5px}
+.mob-card-desc{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:8px}
+.mob-tags{display:flex;flex-wrap:wrap;gap:4px}
+.mob-tag{font-size:10px;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.08);color:var(--text-muted)}
+.mob-link{display:inline-block;margin-top:8px;font-size:11px;color:var(--accent);text-decoration:none}
+.mob-footer{padding:24px 22px;text-align:center}
+.mob-con-btn{display:inline-block;margin:4px;padding:9px 20px;background:rgba(10,84,255,0.2);border:1px solid rgba(10,84,255,0.4);border-radius:10px;font-size:13px;color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+
+<!-- ══ BIOS POST ══════════════════════════════════════════════ -->
+<div id="bios">
+  <div class="bios-header">
+    <div class="bios-brand">AhmedOS BIOS v1.0  —  Copyright (C) 2025 Ahmed Essam</div>
+    <div class="bios-sub">CPU: x86_64-js Virtual Processor @ 3.20GHz  |  RAM: 4096MB  |  BOOT: NVMe0n1</div>
+  </div>
+  <div id="bios-lines"></div>
+  <div class="bios-bar-wrap" id="bios-bar-wrap" style="opacity:0;transition:opacity .4s">
+    <div class="bios-bar-track"><div class="bios-bar-fill" id="bios-bar"></div></div>
+    <div class="bios-bar-lbl" id="bios-lbl">Loading kernel...</div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════════ -->
+<div id="login">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-avatar">A</div>
+    <div class="login-name">Ahmed Essam</div>
+    <div class="login-role">NLP · Intelligent Systems Engineer</div>
+    <div class="login-input-wrap">
+      <input class="login-input" id="login-input" type="password" placeholder="Password" autocomplete="off"/>
+      <button class="login-go" id="login-go">&#8594;</button>
+    </div>
+    <div class="login-hint">Press Enter or click → to continue</div>
+  </div>
+</div>
+
+<!-- ══ DESKTOP ════════════════════════════════════════════════ -->
+<div id="desk">
+  <canvas id="desk-bg"></canvas>
+
+  <!-- MENUBAR -->
+  <div id="mb">
+    <span class="mb-apple">&#63743;</span>
+    <span class="mb-app-name" id="mb-app-name">Finder</span>
+    <span class="mb-sep"></span>
+    <span class="mb-item" onclick="WM.openApp('finder')">File</span>
+    <span class="mb-item" onclick="WM.openApp('research')">Research</span>
+    <span class="mb-item" onclick="WM.openApp('about')">About</span>
+    <span class="mb-item" onclick="document.getElementById('spotlight').classList.add('active');document.getElementById('spotlight-input').focus()">&#8984; Spotlight</span>
+    <div class="mb-right">
+      <span class="mb-right-item" onclick="WM.openApp('activity')">&#9641;</span>
+      <span class="mb-right-item">&#128267;</span>
+      <span class="mb-right-item">&#9001; EN</span>
+      <span class="mb-sep"></span>
+      <span class="mb-clock" id="mb-clock"></span>
+    </div>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div id="ws">
+    <!-- windows rendered here by WM -->
+  </div>
+
+  <!-- DOCK -->
+  <div id="dock">
+    <div class="dock-btn" data-app="terminal" onclick="WM.openApp('terminal')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#1C1C1E,#2C2C2E)">&#8250;_</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">Terminal</div>
+    </div>
+    <div class="dock-btn" data-app="finder" onclick="WM.openApp('finder')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#1A3A5C,#0A2040)">&#128193;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">Finder</div>
+    </div>
+    <div class="dock-btn" data-app="nile" onclick="WM.openApp('nile')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#2A1A00,#3D2800)">&#9733;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">NILE</div>
+    </div>
+    <div class="dock-btn" data-app="about" onclick="WM.openApp('about')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#0A3A6A,#0A2040)">&#9998;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">About</div>
+    </div>
+    <div class="dock-sep-v"></div>
+    <div class="dock-btn" data-app="research" onclick="WM.openApp('research')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#0A3A4A,#041A28)">&#8711;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">Research</div>
+    </div>
+    <div class="dock-btn" data-app="stack" onclick="WM.openApp('stack')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#3A2A00,#201800)">&#9881;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">Stack</div>
+    </div>
+    <div class="dock-btn" data-app="activity" onclick="WM.openApp('activity')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#2A0A4A,#180028)">&#9641;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">Activity Monitor</div>
+    </div>
+    <div class="dock-sep-v"></div>
+    <div class="dock-btn" data-app="connect" onclick="WM.openApp('connect')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#0A3A6A,#0A2040)">&#9993;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">Connect</div>
+    </div>
+    <div class="dock-btn" onclick="window.open('https://github.com/A1medEssam','_blank')">
+      <div class="dock-icon" style="background:linear-gradient(145deg,#1C1C1E,#2C2C2E)">&#60;/&#62;</div>
+      <div class="dock-dot"></div>
+      <div class="dock-tooltip">GitHub</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SPOTLIGHT ══════════════════════════════════════════════ -->
+<div id="spotlight">
+  <div class="spotlight-box">
+    <div class="spotlight-input-row">
+      <span class="spotlight-icon">&#128269;</span>
+      <input class="spotlight-input" id="spotlight-input" placeholder="Spotlight Search" autocomplete="off"/>
+    </div>
+    <div class="spotlight-results" id="spotlight-results"></div>
+  </div>
+</div>
+
+<!-- ══ MOBILE ═════════════════════════════════════════════════ -->
+<div id="mob">
+  <div class="mob-hero">
+    <div class="mob-name">Ahmed Essam</div>
+    <div class="mob-role">NLP · Intelligent Systems · Spatial Computing</div>
+    <div class="mob-badges">
+      <span class="mob-badge">E-JUST BSc. 2025</span>
+      <span class="mob-badge">MSc. Incoming</span>
+      <span class="mob-badge">New Cairo · Egypt</span>
+    </div>
+  </div>
+  <div class="mob-sec">
+    <div class="mob-sec-lbl">FLAGSHIP</div>
+    <div class="mob-card" style="border-color:rgba(201,150,58,0.3);background:rgba(18,10,0,0.9)">
+      <div class="mob-card-name" style="color:#C9963A">★ NILE — Narrating Immersive Legacies of Egypt</div>
+      <div style="font-size:12px;color:#D4C8A0;font-style:italic;margin-bottom:8px">A mummy dead 3,000 years answers Arabic questions in under a second.</div>
+      <div class="mob-card-desc">VR museum · Ministry of Tourism · Yorescape (US) · Alexandria University. Sub-second RAG, Unity XR. Shipped.</div>
+      <div class="mob-tags"><span class="mob-tag">Unity</span><span class="mob-tag">LangChain</span><span class="mob-tag">RAG</span><span class="mob-tag">VR</span></div>
+      <a class="mob-link" href="https://github.com/A1medEssam" target="_blank">github ↗</a>
+    </div>
+  </div>
+  <div class="mob-sec">
+    <div class="mob-sec-lbl">PROJECTS</div>
+    <div class="mob-card"><div class="mob-card-name">Arabic Memes Classifier</div><div class="mob-card-desc">Offensive Arabic meme detection · EMNLP 2025</div><div class="mob-tags"><span class="mob-tag">PyTorch</span><span class="mob-tag">BERT</span></div></div>
+    <div class="mob-card"><div class="mob-card-name">AraSQL</div><div class="mob-card-desc">Arabic NL → SQL · T5 · SQLCoder</div><div class="mob-tags"><span class="mob-tag">T5</span><span class="mob-tag">LLM</span></div></div>
+    <div class="mob-card"><div class="mob-card-name">Pix2Pix ASCII Art</div><div class="mob-card-desc">GANs · genuinely uncanny output</div><div class="mob-tags"><span class="mob-tag">GANs</span><span class="mob-tag">PyTorch</span></div></div>
+  </div>
+  <div class="mob-footer">
+    <a class="mob-con-btn" href="https://github.com/A1medEssam" target="_blank">GitHub ↗</a>
+    <a class="mob-con-btn" href="mailto:ahmed.essam1418@gmail.com">Email ↗</a>
+    <a class="mob-con-btn" href="https://linkedin.com/in/a1medessam" target="_blank">LinkedIn ↗</a>
+  </div>
+</div>
+
+<!-- ══ SCRIPTS ════════════════════════════════════════════════ -->
+<script src="kernel.js"></script>
+<script src="fs.js"></script>
+<script src="shell.js"></script>
+<script src="apps/apps.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════
+// BACKGROUND — breathing dot grid
+// ════════════════════════════════════════════════════════════════
+(function(){
+  const cv  = document.getElementById('desk-bg');
+  const ctx = cv.getContext('2d');
+  const SP  = 42;
+  let W, H, dots, logoImg;
+
+  // Build the logo as an SVG image for the watermark
+  const logoSVG = `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 200 200'>
+    <circle cx='100' cy='100' r='90' fill='none' stroke='white' stroke-width='1'/>
+    <line x1='100' y1='12' x2='100' y2='22' stroke='white' stroke-width='1'/>
+    <line x1='100' y1='178' x2='100' y2='188' stroke='white' stroke-width='1'/>
+    <line x1='12' y1='100' x2='22' y2='100' stroke='white' stroke-width='1'/>
+    <line x1='178' y1='100' x2='188' y2='100' stroke='white' stroke-width='1'/>
+    <polygon points='100,44 54,152 146,152' fill='white' opacity='0.04'/>
+    <line x1='54' y1='152' x2='100' y2='44' stroke='white' stroke-width='2.5' stroke-linecap='round'/>
+    <line x1='146' y1='152' x2='100' y2='44' stroke='white' stroke-width='2.5' stroke-linecap='round'/>
+    <line x1='69' y1='114' x2='131' y2='114' stroke='white' stroke-width='2' stroke-linecap='round' stroke-dasharray='4 3'/>
+    <circle cx='100' cy='44' r='5' fill='white'/>
+    <circle cx='54' cy='152' r='3.5' fill='white' opacity='0.7'/>
+    <circle cx='146' cy='152' r='3.5' fill='white' opacity='0.7'/>
+    <circle cx='69' cy='114' r='2.5' fill='white' opacity='0.8'/>
+    <circle cx='131' cy='114' r='2.5' fill='white' opacity='0.8'/>
+    <polygon points='100,35 95.5,44 104.5,44' fill='white' opacity='0.5'/>
+    <line x1='54' y1='152' x2='146' y2='152' stroke='white' stroke-width='1' opacity='0.3'/>
+    <line x1='146' y1='76' x2='166' y2='76' stroke='white' stroke-width='2.2' stroke-linecap='round'/>
+    <line x1='146' y1='98' x2='160' y2='98' stroke='white' stroke-width='1.6' stroke-linecap='round' opacity='0.7'/>
+    <line x1='146' y1='120' x2='166' y2='120' stroke='white' stroke-width='2.2' stroke-linecap='round'/>
+  </svg>`;
+
+  const blob = new Blob([logoSVG], {type:'image/svg+xml'});
+  const url  = URL.createObjectURL(blob);
+  logoImg    = new Image();
+  logoImg.src = url;
+
+  function init(){
+    W = cv.width  = window.innerWidth;
+    H = cv.height = window.innerHeight;
+    dots = [];
+    for(let y=0;y<=H;y+=SP)
+      for(let x=0;x<=W;x+=SP)
+        dots.push({x,y,ph:Math.random()*Math.PI*2,sp:Math.random()*.005+.003,base:Math.random()*.028+.01});
+  }
+
+  let t=0;
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#080810';ctx.fillRect(0,0,W,H);
+    // blue glow top-left
+    const g=ctx.createRadialGradient(W*.2,H*.15,0,W*.2,H*.15,W*.55);
+    g.addColorStop(0,'rgba(10,84,255,0.06)');g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    // purple glow bottom-right
+    const g2=ctx.createRadialGradient(W*.82,H*.78,0,W*.82,H*.78,W*.42);
+    g2.addColorStop(0,'rgba(191,90,242,0.045)');g2.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);
+
+    // Logo watermark — centered
+    if(logoImg.complete && logoImg.naturalWidth){
+      const s = Math.min(W,H)*0.35;
+      ctx.globalAlpha = 0.045;
+      ctx.drawImage(logoImg, W/2-s/2, H/2-s/2, s, s);
+      ctx.globalAlpha = 1;
+    }
+
+    // Breathing dot grid
+    t+=.007;
+    dots.forEach(d=>{
+      const a=d.base+Math.sin(t*50*d.sp+d.ph)*.018;
+      if(a<.004)return;
+      ctx.beginPath();ctx.arc(d.x,d.y,1,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${a.toFixed(3)})`;ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',init);
+  logoImg.onload=()=>{};
+  init();draw();
+})();
+
+// ════════════════════════════════════════════════════════════════
+// AUDIO — pre-warmed, instant
+// ════════════════════════════════════════════════════════════════
+let _ac=null;
+function getAC(){
+  if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();
+  if(_ac.state==='suspended')_ac.resume();
+  return _ac;
+}
+['mousedown','keydown'].forEach(e=>document.addEventListener(e,()=>{try{getAC()}catch(e){}},{once:true,passive:true}));
+
+function sndKey(){
+  try{
+    const c=getAC(),t=c.currentTime;
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='sine';o.frequency.setValueAtTime(1200,t);o.frequency.exponentialRampToValueAtTime(600,t+.014);
+    o.connect(g);g.connect(c.destination);
+    g.gain.setValueAtTime(.012,t);g.gain.exponentialRampToValueAtTime(.0001,t+.016);
+    o.start(t);o.stop(t+.018);
+  }catch(e){}
+}
+function sndChime(){
+  try{
+    const c=getAC();
+    [[392,0],[523,.14],[659,.26],[784,.36]].forEach(([f,d])=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='sine';o.frequency.value=f;
+      o.connect(g);g.connect(c.destination);
+      const t=c.currentTime+d;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.024,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.65);
+      o.start(t);o.stop(t+.7);
+    });
+  }catch(e){}
+}
+function sndOpen(){
+  try{
+    const c=getAC(),t=c.currentTime;
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='sine';o.frequency.setValueAtTime(480,t);o.frequency.exponentialRampToValueAtTime(720,t+.09);
+    o.connect(g);g.connect(c.destination);
+    g.gain.setValueAtTime(.016,t);g.gain.exponentialRampToValueAtTime(.0001,t+.14);
+    o.start(t);o.stop(t+.15);
+  }catch(e){}
+}
+
+// ════════════════════════════════════════════════════════════════
+// BIOS POST
+// ════════════════════════════════════════════════════════════════
+window._bootTime = Date.now();
+const BIOS_LINES = [
+  {c:'bl-dim', t:'BIOS-e000:'},
+  {c:'bl-white',t:'  POST: Memory test... '},
+  {c:'bl-ok',   t:'  [ OK ] 4096MB RAM detected'},
+  {c:'bl-ok',   t:'  [ OK ] CPU: x86_64-js Virtual @ 3.20GHz x4'},
+  {c:'bl-ok',   t:'  [ OK ] Storage: NVMe 512GB'},
+  {c:'bl-ok',   t:'  [ OK ] GPU: WebGL 2.0 Renderer'},
+  {c:'bl-dim',  t:''},
+  {c:'bl-white',t:'  Loading bootloader...'},
+  {c:'bl-ok',   t:'  [ OK ] GRUB 2.0 → AhmedOS Kernel 1.0.0'},
+  {c:'bl-white',t:'  Decompressing kernel image...'},
+  {c:'bl-ok',   t:'  [ OK ] Kernel loaded at 0x100000'},
+  {c:'bl-dim',  t:''},
+  {c:'bl-white',t:'  [    0.000000] AhmedOS 1.0.0 booting...'},
+  {c:'bl-ok',   t:'  [    0.012000] Kernel: ProcessManager initialized'},
+  {c:'bl-ok',   t:'  [    0.024000] Kernel: MemoryManager — 4096MB physical RAM'},
+  {c:'bl-ok',   t:'  [    0.036000] Kernel: Scheduler — round-robin, quantum=100ms'},
+  {c:'bl-ok',   t:'  [    0.048000] Kernel: EventBus — IPC ready'},
+  {c:'bl-ok',   t:'  [    0.060000] VFS: Virtual filesystem mounted'},
+  {c:'bl-ok',   t:'  [    0.072000] VFS: /proc, /home, /bin, /etc initialized'},
+  {c:'bl-ok',   t:'  [    0.090000] init: PID 1 spawned'},
+  {c:'bl-ok',   t:'  [    0.102000] wm: Window Manager PID 2 spawned'},
+  {c:'bl-ok',   t:'  [    0.114000] kschedule: Scheduler daemon PID 3 spawned'},
+  {c:'bl-info', t:'  [    0.130000] Mounting /home/ahmed ...'},
+  {c:'bl-ok',   t:'  [    0.144000] systemd: All services started successfully'},
+  {c:'bl-dim',  t:''},
+  {c:'bl-ok',   t:'  AhmedOS 1.0.0 ready. Starting login manager...'},
+];
+
+let bIdx=0;
+const blEl = document.getElementById('bios-lines');
+
+function biosTick(){
+  if(bIdx>=BIOS_LINES.length){
+    setTimeout(()=>{
+      document.getElementById('bios-bar-wrap').style.opacity='1';
+      biosBar();
+    },200);
+    return;
+  }
+  const {c,t} = BIOS_LINES[bIdx];
+  const d=document.createElement('div');
+  d.className=`bios-line ${c}`;
+  d.textContent=t;
+  blEl.appendChild(d);
+  bIdx++;
+  setTimeout(biosTick, 28+Math.random()*18);
+}
+setTimeout(biosTick,300);
+
+function biosBar(){
+  const fill=document.getElementById('bios-bar'),lbl=document.getElementById('bios-lbl');
+  const steps=['Loading kernel modules...','Starting filesystem services...','Initializing AI runtime...','Spawning system processes...','Starting login manager...'];
+  let p=0,si=0;
+  const iv=setInterval(()=>{
+    p+=1.6;fill.style.width=Math.min(p,100)+'%';
+    if(p%20<2&&si<steps.length)lbl.textContent=steps[si++];
+    if(p>=100){
+      clearInterval(iv);
+      lbl.textContent='System ready.';
+      setTimeout(()=>{
+        Kernel.init();
+        document.getElementById('bios').classList.add('out');
+        setTimeout(showLogin,700);
+      },400);
+    }
+  },26);
+}
+
+// ════════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════════
+function showLogin(){
+  const login=document.getElementById('login');
+  login.classList.add('active');
+  const inp=document.getElementById('login-input');
+  setTimeout(()=>inp.focus(),300);
+
+  const proceed=()=>{
+    sndChime();
+    login.classList.add('out');
+    setTimeout(launchDesktop,900);
+  };
+
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') proceed(); });
+  document.getElementById('login-go').addEventListener('click',proceed);
+}
+
+// ════════════════════════════════════════════════════════════════
+// WINDOW MANAGER
+// ════════════════════════════════════════════════════════════════
+window.WM = {
+  _zTop: 10,
+  _drag: null, _dox:0, _doy:0,
+  _rsz:  null, _rsx:0, _rsy:0, _rsw:0, _rsh:0,
+  _wins: {},   // winId → { pid, appId }
+  sndKey,
+
+  openApp(appId){
+    const app = Apps[appId];
+    if(!app){ console.warn('Unknown app:', appId); return; }
+
+    // reuse existing window
+    const existing = Object.entries(this._wins).find(([,v])=>v.appId===appId);
+    if(existing){
+      const wEl=document.getElementById(existing[0]);
+      if(wEl){ this.focusWin(wEl); return; }
+    }
+
+    sndOpen();
+    const winId = `win-${appId}-${Date.now()}`;
+    const pid   = Kernel.pm.spawn({ name:app.name, memMB:app.memMB, color:app.color, windowId:winId });
+    this._wins[winId] = { pid, appId };
+
+    const wEl = document.createElement('div');
+    wEl.className = 'win';
+    wEl.id        = winId;
+    wEl.style.width  = app.width  + 'px';
+    wEl.style.height = app.height + 'px';
+
+    wEl.innerHTML = `
+      <div class="win-chrome" data-wid="${winId}">
+        <div class="win-chrome-btns">
+          <div class="win-btn win-close" data-close="${winId}"></div>
+          <div class="win-btn win-min"   data-min="${winId}"></div>
+          <div class="win-btn win-max"   data-max="${winId}"></div>
+        </div>
+        <div class="win-chrome-title">${app.name}</div>
+      </div>
+      <div class="win-body" id="body-${winId}">${app.render()}</div>
+      <div class="win-resize" data-rz="${winId}"></div>`;
+
+    document.getElementById('ws').appendChild(wEl);
+    this._center(wEl);
+    wEl.classList.add('open');
+    this.focusWin(wEl);
+
+    // mount app logic
+    app.mount(document.getElementById(`body-${winId}`), winId);
+
+    // mark dock btn running
+    const dBtn = document.querySelector(`[data-app="${appId}"]`);
+    if(dBtn) dBtn.classList.add('running');
+
+    // update menubar
+    document.getElementById('mb-app-name').textContent = app.name;
+
+    this._saveState();
+  },
+
+  closeWin(winId){
+    const wEl = document.getElementById(winId);
+    if(!wEl) return;
+    const info = this._wins[winId];
+    if(info){
+      Kernel.pm.kill(info.pid);
+      const dBtn = document.querySelector(`[data-app="${info.appId}"]`);
+      if(dBtn) dBtn.classList.remove('running');
+    }
+    EventBus.emit('window:close',{wid:winId});
+    wEl.style.animation='win-close-anim .18s forwards';
+    setTimeout(()=>{ wEl.remove(); delete this._wins[winId]; this._saveState(); }, 200);
+  },
+
+  closeByPid(pid){
+    const entry = Object.entries(this._wins).find(([,v])=>v.pid===pid);
+    if(entry) this.closeWin(entry[0]);
+  },
+
+  focusWin(wEl){
+    document.querySelectorAll('.win').forEach(w=>w.classList.remove('focused'));
+    wEl.classList.add('focused');
+    wEl.style.zIndex = ++this._zTop;
+    const info = this._wins[wEl.id];
+    if(info) document.getElementById('mb-app-name').textContent = Apps[info.appId]?.name||'';
+  },
+
+  _center(w){
+    const ws=document.getElementById('ws');
+    const maxL=Math.max(20,Math.floor((ws.offsetWidth-w.offsetWidth)/2));
+    const maxT=Math.max(8,Math.floor((ws.offsetHeight-w.offsetHeight)/2-36));
+    // stagger slightly
+    const off=Object.keys(this._wins).length*22;
+    w.style.left=(maxL+off%120)+'px';
+    w.style.top =(maxT+off%80)+'px';
+  },
+
+  _saveState(){
+    try{
+      const s={};
+      document.querySelectorAll('.win.open').forEach(w=>{
+        const info=this._wins[w.id];
+        if(info) s[info.appId]={l:w.style.left,t:w.style.top,wi:w.style.width,hi:w.style.height};
+      });
+      localStorage.setItem('ahmedos-v5-wins',JSON.stringify(s));
+    }catch(e){}
+  },
+};
+
+// mouse events for drag/resize/close
+document.addEventListener('mousedown',e=>{
+  const w=e.target.closest('.win');
+  if(w) WM.focusWin(w);
+
+  const bar=e.target.closest('.win-chrome');
+  if(bar&&!e.target.dataset.close&&!e.target.dataset.min&&!e.target.dataset.max){
+    WM._drag=document.getElementById(bar.dataset.wid);
+    WM._dox=e.clientX-WM._drag.offsetLeft;
+    WM._doy=e.clientY-WM._drag.offsetTop;
+    e.preventDefault();
+  }
+  const rz=e.target.dataset.rz;
+  if(rz){
+    const wEl=document.getElementById(rz);
+    WM._rsz=wEl;WM._rsx=e.clientX;WM._rsy=e.clientY;
+    WM._rsw=wEl.offsetWidth;WM._rsh=wEl.offsetHeight;
+    e.preventDefault();
+  }
+});
+document.addEventListener('mousemove',e=>{
+  if(WM._drag){
+    WM._drag.style.left=(e.clientX-WM._dox)+'px';
+    WM._drag.style.top =(e.clientY-WM._doy)+'px';
+  }
+  if(WM._rsz){
+    const app=Apps[WM._wins[WM._rsz.id]?.appId];
+    const minW=app?.minW||280, minH=app?.minH||120;
+    WM._rsz.style.width =Math.max(minW,WM._rsw+(e.clientX-WM._rsx))+'px';
+    WM._rsz.style.height=Math.max(minH,WM._rsh+(e.clientY-WM._rsy))+'px';
+  }
+});
+document.addEventListener('mouseup',()=>{ if(WM._drag||WM._rsz)WM._saveState(); WM._drag=null;WM._rsz=null; });
+document.addEventListener('click',e=>{
+  if(e.target.dataset.close) WM.closeWin(e.target.dataset.close);
+});
+
+// ════════════════════════════════════════════════════════════════
+// SPOTLIGHT
+// ════════════════════════════════════════════════════════════════
+(function(){
+  const overlay = document.getElementById('spotlight');
+  const input   = document.getElementById('spotlight-input');
+  const results = document.getElementById('spotlight-results');
+
+  const ALL_APPS = Object.values(Apps).map(a=>({ name:a.name, icon:a.icon, color:a.color, id:a.id, desc:`Open ${a.name}` }));
+
+  function render(q){
+    const items = q ? ALL_APPS.filter(a=>a.name.toLowerCase().includes(q.toLowerCase())) : ALL_APPS;
+    results.innerHTML = items.map((a,i)=>`
+      <div class="spotlight-item${i===0?' selected':''}" onclick="WM.openApp('${a.id}');closeSpotlight()">
+        <div class="spotlight-item-icon" style="background:rgba(255,255,255,0.06)">${a.icon}</div>
+        <div><div class="spotlight-item-name">${a.name}</div><div class="spotlight-item-desc">${a.desc}</div></div>
+      </div>`).join('');
+  }
+
+  input.addEventListener('input',()=>render(input.value));
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Escape') closeSpotlight();
+    if(e.key==='Enter'){
+      const sel=results.querySelector('.selected');
+      if(sel) sel.click();
+    }
+  });
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) closeSpotlight(); });
+  document.addEventListener('keydown',e=>{
+    if((e.metaKey||e.ctrlKey)&&e.key==='k'){
+      e.preventDefault();
+      overlay.classList.add('active');
+      input.focus();
+      render('');
+    }
+  });
+  window.closeSpotlight=()=>{ overlay.classList.remove('active'); input.value=''; results.innerHTML=''; };
+  render('');
+})();
+
+// ════════════════════════════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════════════════════════════
+function startClock(){
+  const el=document.getElementById('mb-clock');
+  function tick(){
+    const n=new Date();
+    el.textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+
+      '  '+n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  }
+  tick();setInterval(tick,1000);
+}
+
+// ════════════════════════════════════════════════════════════════
+// LAUNCH DESKTOP
+// ════════════════════════════════════════════════════════════════
+function launchDesktop(){
+  document.getElementById('login').style.display='none';
+  const desk=document.getElementById('desk');
+  desk.classList.add('active');
+  startClock();
+
+  // Restore previous session
+  try{
+    const saved=localStorage.getItem('ahmedos-v5-wins');
+    if(saved){
+      const s=JSON.parse(saved);
+      Object.entries(s).forEach(([appId])=>WM.openApp(appId));
+      return;
+    }
+  }catch(e){}
+
+  // Default: open terminal + about
+  WM.openApp('terminal');
+  setTimeout(()=>WM.openApp('about'),300);
+}
+
+// Keyboard shortcut: Cmd/Ctrl+K = spotlight
+// Win close animation
+const style=document.createElement('style');
+style.textContent='@keyframes win-close-anim{to{opacity:0;transform:scale(.95)}}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
