@@ -1,5 +1,6 @@
-# AhmedOS v1.0.0
+# AhmedOS - AOS
 
+> *The V8 sounds best in a classy car. This is the eighth build, and the one that finally runs.*<br>
 > A simulated Unix-like operating system built as a browser application — real OS architecture, real concepts, running on V8.
 
 **[Live Demo →](https://A1medEssam.github.io)**
@@ -8,9 +9,17 @@
 
 ## What is this?
 
-AhmedOS is a fully functional portfolio OS simulator built from scratch. It implements real operating system concepts — not cosmetically, but architecturally. Every window is a process. Every file lives in an inode-based virtual filesystem. A round-robin scheduler runs continuously, allocating time slices and maintaining a Gantt chart. Memory is tracked per-segment with a live memory map.
+Nobody writes an OS for fun. You write it because something broke in your head the day you realized that "running a program" is not what you thought it was — that there's a whole conversation happening underneath, between software and metal, and you weren't part of it yet.
 
-The OS is also the portfolio. Open a terminal, navigate the filesystem, read the README files, launch apps. This is not a portfolio that *looks like* an OS — it's an OS that *contains* a portfolio.
+Most of what I build lives high up the stack - LLMs, multimodal systems, spatial computing. I work close to the top of the stack, mostly. But at some point the question got louder: what's actually down there? What decides which process runs right now? What turns a filesystem into magnetism and back again? Who's managing the metal?
+
+Before this there were smaller projects — each one a test of one concept. A scheduler here. A memory thing there. Some work. Some don't, and I left them on GitHub exactly as they were because that's what learning actually looks like. Cleaning them up would be lying.
+
+AhmedOS is where it all became one thing. First complete attempt. Real scheduler, real VFS, real shell, real memory manager. Also my portfolio — every window is a process, every project lives in an inode, the terminal navigates a real filesystem. Open a terminal, navigate the filesystem, read the README files, launch apps.
+
+It's a demo version, and  there's a next-generation version being planned. The gap is closing.
+
+> One another thing: I would like to acknowledge four key references, which I learned a great deal about operating systems, computer organization and design, and paralel & distributing computing. These are listed in the [Resources](#References) section.
 
 ---
 
@@ -85,7 +94,7 @@ A bash-compatible interpreter with:
 - `man` with real manual pages (including `man ahmed`)
 - `neofetch` with live system stats
 - `open [app]` launches any application window
-- `./NILE/run.sh` executes shell scripts (parses `open` commands inside)
+- `./NILE/run.sh` executes shell scripts
 - Command history with ↑↓ navigation
 - `export` / `env` for environment variable management
 
@@ -130,9 +139,9 @@ man ahmed                       # manual page for Ahmed Essam
 
 | App | Description |
 |-----|-------------|
-| **Terminal** | Full shell interpreter, command history, tab-navigable |
+| **Terminal** | Full shell interpreter, command history, ↑↓ navigation |
 | **Finder** | Project grid — click NILE to open the flagship window |
-| **NILE** | Dedicated window for the graduation project with pharaonic theme |
+| **NILE** | Graduation project window with pharaonic theme |
 | **Activity Monitor** | Live Gantt chart, process table with CPU/MEM, memory segment map |
 | **About** | Personal bio, education, languages |
 | **Research** | Active research threads with tags |
@@ -147,47 +156,12 @@ man ahmed                       # manual page for Ahmed Essam
 2. **Kernel loading** — decompression, base address assignment
 3. **Kernel init** — ProcessManager, MemoryManager, Scheduler, EventBus, VFS
 4. **System processes** — swapper (PID 0), init (PID 1), wm (PID 2), kschedule (PID 3)
-5. **Login manager** — username/password prompt (any input works)
+5. **Login manager** — username/password prompt
 6. **Desktop** — window manager, dock, menubar, Spotlight (Cmd/Ctrl+K)
 
 ---
 
-## Technologies
-
-| Layer | Technologies |
-|-------|-------------|
-| **OS Architecture** | Process scheduling (round-robin), Virtual filesystem (inode-based), Memory management (segmentation), IPC (pub/sub EventBus) |
-| **Frontend** | Vanilla JavaScript (ES2020), HTML5 Canvas, CSS3 (backdrop-filter, variables, animations) |
-| **Rendering** | Apple-style dark UI, frosted glass (backdrop-filter blur + saturate), spring animations |
-| **Audio** | Web Audio API — synthesized sounds (no audio files), AudioContext oscillators |
-| **Persistence** | localStorage session restore across page reloads |
-| **Performance** | RAF animation loop, canvas dot-grid, SVG logo watermark |
-
----
-
-## Design
-
-The visual direction is **Apple macOS dark mode** — the most refined desktop aesthetic available:
-
-- **Colors**: Pure black `#000` base, `rgba(30,30,35,0.96)` window surfaces, `#0A84FF` accent (Apple Blue), `#BF5AF2` secondary (Apple Purple)
-- **Typography**: System font stack (`-apple-system`, `SF Pro Display`) for UI; `JetBrains Mono` for terminal
-- **Windows**: `backdrop-filter: blur(24px) saturate(180%)` frosted glass, 14px border radius, traffic light buttons (🔴🟡🟢)
-- **Dock**: Spring animation `cubic-bezier(.34,1.2,.64,1)`, tooltip on hover, running-process indicator dot
-- **Logo**: Geometric A/pyramid monogram — the A doubles as a pyramid (Egyptian heritage), dashed crossbar (data/code), neural nodes at vertices, E-mark from three horizontal bars (initials AE)
-
----
-
 ## OS Concepts Demonstrated
-
-This project demonstrates the following OS concepts studied at E-JUST:
-
-- **Process management** — PCB structure, process states, spawn/kill/zombie lifecycle
-- **CPU scheduling** — Round-robin with time quanta, ready queue management, context switch simulation, Gantt visualization
-- **Memory management** — Segmented address space, allocation/deallocation, free list tracking, memory map visualization
-- **Virtual filesystem** — Inode abstraction, path resolution, directory traversal, `/proc` dynamic filesystem
-- **IPC** — Event-driven publish/subscribe, decoupled component communication
-- **Shell** — Command parsing, tokenization, environment variables, process execution, built-in vs external commands
-- **Boot process** — POST simulation, bootloader, kernel initialization, init system, login manager
 
 ---
 
@@ -198,21 +172,22 @@ No build step. No dependencies.
 ```bash
 git clone https://github.com/A1medEssam/A1medEssamV8.github.io
 cd A1medEssamV8.github.io
-# Serve with any static file server
 python3 -m http.server 8080
-# open http://localhost:8080
 ```
 
-Or just visit the [live demo](https://A1medEssam.github.io).
+Or visit the [live demo](https://A1medEssam.github.io).
 
 ---
 
-## Project Context
+## References 
 
-AhmedOS was built as a portfolio presentation layer for Ahmed Essam's work in AI, NLP, and intelligent systems. It demonstrates OS-level systems thinking applied to a frontend context — the same architectural concepts (scheduling, IPC, VFS, memory management) implemented in JavaScript running on V8, the same way those concepts would be implemented in C on bare metal, just with the browser as the hardware abstraction layer.
+| | |
+|---|---|
+| *Operating System Concepts*, 10th Edition, 2018 | Silberschatz, Galvin & Gagne
+| *Computer Organization and Design: The Hardware/Software Interface*, 5th Edition, Morgan Kaufmann, 2014 | Patterson & Hennessy |
+| *Parallel Programming: Concepts and Practice*, Morgan Kaufmann | Schmidt, Gonzalez-Dominguez, Hundt & Schlarb |
 
 ---
-
 ## Author
 
 **Ahmed Essam**  
@@ -220,4 +195,4 @@ NLP & Intelligent Systems Engineer
 E-JUST · AI & Data Science · BSc. 2025  
 New Cairo, Egypt
 
-[GitHub](https://github.com/A1medEssam) · [Email](mailto:ahmed.essam1418@gmail.com) · [LinkedIn](https://linkedin.com/in/a1medessam)
+[GitHub](https://github.com/A1medEssam) · [Email](mailto:ahmed.essam1418@gmail.com) · [LinkedIn](https://linkedin.com/in/a1medessam) · [Kaggle](https://kaggle.com/a1medessam)
